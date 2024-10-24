@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 using Dapper;
 
 
-namespace DotnetAPI
+namespace DotnetAPI.Data
 {
 
     class DataContextDapper
