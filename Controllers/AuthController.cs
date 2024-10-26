@@ -25,7 +25,6 @@ namespace DotnetAPI.Controllers
 
 
         [HttpPost("Register")]
-        [HttpPost("Login")]
 
         public IActionResult Register(UserForRegistrationDto userForRegistration)
         {
@@ -41,15 +40,8 @@ namespace DotnetAPI.Controllers
                     {
                         rng.GetNonZeroBytes(passwordSalt);
                     }
-                    string passwordSaltPlusString = _config.GetSection("AppSettings:PasswordKey").Value + Convert.ToBase64String(passwordSalt);
 
-                    byte[] passwordHash = KeyDerivation.Pbkdf2(
-                        password: userForRegistration.Password,
-                        salt: Encoding.ASCII.GetBytes(passwordSaltPlusString),
-                        prf: KeyDerivationPrf.HMACSHA256,
-                        iterationCount: 100000,
-                        numBytesRequested: 256 / 8
-                    );
+                    byte[] passwordHash = GetPasswordHash(userForRegistration.Password, passwordSalt);
 
                     string sqlAddAuth = "INSERT INTO UsersSchema.Auth([Email], [PasswordHash], [PasswordSalt]) VALUES ('" + userForRegistration.Email + "', @PasswordHash, @PasswordSalt)";
                     List<SqlParameter> sqlParameters = new List<SqlParameter>();
@@ -76,10 +68,25 @@ namespace DotnetAPI.Controllers
             throw new Exception("Passwords do not match");
         }
         
+
+
+        [HttpPost("Login")]
+
+        
         public IActionResult Login(UserForLoginDto userForLogin)
         {
             string sqlForHashAndSalt = "SELECT [PasswordHash], [PasswordSalt] FROM UsersSchema.Auth WHERE Email = '" + userForLogin.Email + "'";
             UserForLoginConfirmationDto userForLoginConfirmation = _dapper.LoadDataSingle<UserForLoginConfirmationDto>(sqlForHashAndSalt);
+            
+            byte[] passwordHash = GetPasswordHash(userForLogin.Password, userForLoginConfirmation.PasswordSalt);
+            
+            for (int i = 0; i < passwordHash.Length; i++)
+            {
+                if(passwordHash[i] != userForLoginConfirmation.PasswordHash[i])
+                {
+                    return StatusCode(401, "Password is incorrect");
+                }
+            }
             return Ok();
         }
         private byte[] GetPasswordHash(string password, byte[] passwordSalt)
