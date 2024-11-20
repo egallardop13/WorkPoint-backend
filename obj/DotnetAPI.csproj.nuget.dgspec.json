@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/ernesto/Library/CloudStorage/OneDrive-E&ETechnologiesLLC/C# .Net/DotnetAPI/DotnetAPI.csproj": {}
+    "D:\\EE Technologies LLC\\ConnectWise\\DotNetApi\\DotnetAPI\\DotnetAPI.csproj": {}
   },
   "projects": {
-    "/Users/ernesto/Library/CloudStorage/OneDrive-E&ETechnologiesLLC/C# .Net/DotnetAPI/DotnetAPI.csproj": {
+    "D:\\EE Technologies LLC\\ConnectWise\\DotNetApi\\DotnetAPI\\DotnetAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/ernesto/Library/CloudStorage/OneDrive-E&ETechnologiesLLC/C# .Net/DotnetAPI/DotnetAPI.csproj",
+        "projectUniqueName": "D:\\EE Technologies LLC\\ConnectWise\\DotNetApi\\DotnetAPI\\DotnetAPI.csproj",
         "projectName": "DotnetAPI",
-        "projectPath": "/Users/ernesto/Library/CloudStorage/OneDrive-E&ETechnologiesLLC/C# .Net/DotnetAPI/DotnetAPI.csproj",
-        "packagesPath": "/Users/ernesto/.nuget/packages/",
-        "outputPath": "/Users/ernesto/Library/CloudStorage/OneDrive-E&ETechnologiesLLC/C# .Net/DotnetAPI/obj/",
+        "projectPath": "D:\\EE Technologies LLC\\ConnectWise\\DotNetApi\\DotnetAPI\\DotnetAPI.csproj",
+        "packagesPath": "C:\\Users\\egall\\.nuget\\packages\\",
+        "outputPath": "D:\\EE Technologies LLC\\ConnectWise\\DotNetApi\\DotnetAPI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/ernesto/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\egall\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -83,7 +83,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.401/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.404/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
