@@ -29,27 +29,33 @@ builder.Services.AddCors(options =>
         });
 });
 
-string? tokenKeyString = builder.Configuration.GetSection("AppSettings:TokenKey").Value;
+string? tokenKeyString = 
+builder.Configuration.GetSection("AppSettings:TokenKey").Value;
 
-            SymmetricSecurityKey tokenKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(tokenKeyString != null ? tokenKeyString : ""
-                    )
-                );
-
-TokenValidationParameters tokenValidationParameters = new TokenValidationParameters
-{
-    IssuerSigningKey = tokenKey,
-    ValidateIssuerSigningKey = true,   //false
-    ValidateIssuer = false,
-    ValidateAudience = false
-};
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = tokenValidationParameters;
+        options.TokenValidationParameters = new 
+TokenValidationParameters()
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new 
+SymmetricSecurityKey(Encoding.ASCII.GetBytes(
+            tokenKeyString != null ? tokenKeyString : ""
+            )),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
     });
 
+// TokenValidationParameters tokenValidationParameters = new TokenValidationParameters
+// {
+//     IssuerSigningKey = tokenKey,
+//     ValidateIssuerSigningKey = true,   //false
+//     ValidateIssuer = false,
+//     ValidateAudience = false
+// };
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

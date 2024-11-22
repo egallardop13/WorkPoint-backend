@@ -142,3 +142,4 @@ D:\EE Technologies LLC\ConnectWise\DotNetApi\DotnetAPI\obj\Debug\net8.0\refint\D
 D:\EE Technologies LLC\ConnectWise\DotNetApi\DotnetAPI\obj\Debug\net8.0\DotnetAPI.pdb
 D:\EE Technologies LLC\ConnectWise\DotNetApi\DotnetAPI\obj\Debug\net8.0\DotnetAPI.genruntimeconfig.cache
 D:\EE Technologies LLC\ConnectWise\DotNetApi\DotnetAPI\obj\Debug\net8.0\ref\DotnetAPI.dll
+D:\EE Technologies LLC\ConnectWise\DotNetApi\DotnetAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
