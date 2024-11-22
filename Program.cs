@@ -1,3 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -25,6 +29,26 @@ builder.Services.AddCors(options =>
         });
 });
 
+string? tokenKeyString = builder.Configuration.GetSection("AppSettings:TokenKey").Value;
+
+            SymmetricSecurityKey tokenKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(tokenKeyString != null ? tokenKeyString : ""
+                    )
+                );
+
+TokenValidationParameters tokenValidationParameters = new TokenValidationParameters
+{
+    IssuerSigningKey = tokenKey,
+    ValidateIssuerSigningKey = true,   //false
+    ValidateIssuer = false,
+    ValidateAudience = false
+};
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = tokenValidationParameters;
+    });
 
 var app = builder.Build();
 
@@ -48,7 +72,10 @@ app.UseHttpsRedirection();
 // })
 // .WithName("GetWeatherForecast")
 // .WithOpenApi();
+app.UseAuthentication();
+
 app.UseAuthorization();
+
 app.MapControllers();
 
 
