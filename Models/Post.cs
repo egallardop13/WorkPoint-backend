@@ -2,7 +2,7 @@ namespace DotnetAPI.Models
 {
     public partial class Post
     {
-        public int PostID { get; set; }
+        public int PostId { get; set; }
         public int UserId { get; set; }
         public string PostTitle { get; set; }
         public string PostContent { get; set; }
@@ -10,16 +10,16 @@ namespace DotnetAPI.Models
 
         public DateTime PostUpdated { get; set; }
 
-                public Post()
-                {
-                    if(PostTitle == null)
-                    {
-                        PostTitle = "";
-                    }
-                    if(PostContent == null)
-                    {
-                        PostContent = "";
-                    }
-                }
+        public Post()
+        {
+            if (PostTitle == null)
+            {
+                PostTitle = "";
+            }
+            if (PostContent == null)
+            {
+                PostContent = "";
+            }
+        }
     }
 }

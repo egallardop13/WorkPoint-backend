@@ -8,15 +8,14 @@ namespace DotnetAPI.Models
 
         public UserJobInfo()
         {
-            if(JobTitle == null)
+            if (JobTitle == null)
             {
                 JobTitle = "";
             }
-            if(Department == null)
+            if (Department == null)
             {
                 Department = "";
             }
-            
-    }
+        }
     }
 }
