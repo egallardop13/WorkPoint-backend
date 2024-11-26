@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Dapper;
 using DotnetAPI.Data;
 using DotnetAPI.Dtos;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
@@ -80,25 +81,31 @@ namespace DotnetAPI.Helpers
                         @Email = @EmailParam,
                         @PasswordHash = @PasswordHashParam, 
                         @PasswordSalt = @PasswordSaltParam";
-            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            // List<SqlParameter> sqlParameters = new List<SqlParameter>();
 
-            SqlParameter emailParamater = new SqlParameter("@EmailParam", SqlDbType.VarChar);
-            emailParamater.Value = userForSetPassword.Email;
-            sqlParameters.Add(emailParamater);
+            // SqlParameter emailParamater = new SqlParameter("@EmailParam", SqlDbType.VarChar);
+            // emailParamater.Value = userForSetPassword.Email;
+            // sqlParameters.Add(emailParamater);
 
-            SqlParameter passwordSaltParamater = new SqlParameter(
-                "@PasswordSaltParam",
-                SqlDbType.VarBinary
-            );
-            passwordSaltParamater.Value = passwordSalt;
-            sqlParameters.Add(passwordSaltParamater);
+            // SqlParameter passwordSaltParamater = new SqlParameter(
+            //     "@PasswordSaltParam",
+            //     SqlDbType.VarBinary
+            // );
+            // passwordSaltParamater.Value = passwordSalt;
+            // sqlParameters.Add(passwordSaltParamater);
 
-            SqlParameter passwordHashParamater = new SqlParameter(
-                "@PasswordHashParam",
-                SqlDbType.VarBinary
-            );
-            passwordHashParamater.Value = passwordHash;
-            sqlParameters.Add(passwordHashParamater);
+            // SqlParameter passwordHashParamater = new SqlParameter(
+            //     "@PasswordHashParam",
+            //     SqlDbType.VarBinary
+            // );
+            // passwordHashParamater.Value = passwordHash;
+            // sqlParameters.Add(passwordHashParamater);
+
+            DynamicParameters sqlParameters = new DynamicParameters();
+
+            sqlParameters.Add("@EmailParam", userForSetPassword.Email, DbType.String);
+            sqlParameters.Add("@PasswordHashParam", passwordHash, DbType.Binary);
+            sqlParameters.Add("@PasswordSaltParam", passwordSalt, DbType.Binary);
 
             return _dapper.ExecuteSqlWithParameter(sqlAddAuth, sqlParameters);
         }

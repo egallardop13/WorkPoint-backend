@@ -1,77 +1,86 @@
-using DotnetAPI.Models;
-using DotnetAPI.Dtos;
+using System.Data;
+using Dapper;
 using DotnetAPI.Data;
+using DotnetAPI.Dtos;
+using DotnetAPI.Helpers;
+using DotnetAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 namespace DotnetAPI.Controllers
 {
-
-[ApiController]
-[Route("[controller]")]
-public class UserCompleteController : ControllerBase 
-{
- DataContextDapper _dapper;
- public UserCompleteController(IConfiguration config){
-     _dapper = new DataContextDapper(config);
- }
-
-
-[HttpGet("GetUsers/{userId}/{isActive}")]
-    public IEnumerable<UserComplete> GetUsers(int userId, bool isActive) {
-        string sql = @"EXEC UsersSchema.spUsers_Get";
-        string parameters = "";
-        
-        if(userId!=0){
-            parameters += ", @UserId=" + userId.ToString();
-        } 
-        if(isActive){
-            parameters += ", @Active=" + isActive.ToString();
-        } 
-
-        sql += parameters.Substring(1);
-
-        IEnumerable<UserComplete> users = _dapper.LoadData<UserComplete>(sql);
-        return users;
-    }
-
-   
-[HttpPut("UpsertUser")]
-
-public IActionResult UpsertUser( UserComplete user) {
-    string sql = @"EXEC UsersSchema.spUser_Upsert
-        @FirstName = '" + user.FirstName + 
-        "', @LastName = '" + user.LastName + 
-        "', @Email = '" + user.Email + 
-        "', @Gender = '" + user.Gender +
-        "', @Active = '" + user.Active +
-        "', @JobTitle = '" + user.JobTitle +
-        "', @Department = '" + user.Department +
-        "', @Salary = '" + user.Salary +
-        "', @UserId = " + user.UserId; 
-
-
-    if(_dapper.ExecuteSql(sql)) 
+    [Authorize]
+    [ApiController]
+    [Route("[controller]")]
+    public class UserCompleteController : ControllerBase
     {
-        return Ok();
-    }
+        DataContextDapper _dapper;
 
-    throw new Exception("Failed to update user");
-}
+        ReusableSql _reusableSql;
 
-
-    [HttpDelete("DeleteUser/{userId}")]
-    public IActionResult DeleteUser(int userId) 
-    {
-        string sql = @"UsersSchema.spUser_Delete
-        @UserId = " + userId.ToString();
-
- 
-        if(_dapper.ExecuteSql(sql)) 
+        public UserCompleteController(IConfiguration config)
         {
-        return Ok();
+            _dapper = new DataContextDapper(config);
+            _reusableSql = new ReusableSql(config);
         }
-        
-        throw new Exception("Failed to delete user");
+
+        [HttpGet("GetUsers/{userId}/{isActive}")]
+        public IEnumerable<UserComplete> GetUsers(int userId, bool isActive)
+        {
+            string sql = @"EXEC UsersSchema.spUsers_Get";
+            string parameters = "";
+            DynamicParameters sqlParameters = new DynamicParameters();
+
+            if (userId != 0)
+            {
+                parameters += ", @UserId= @UserIdParameter";
+                sqlParameters.Add("@UserIdParameter", userId, DbType.Int32);
+            }
+            if (isActive)
+            {
+                parameters += ", @Active= @ActiveParameter";
+                sqlParameters.Add("@ActiveParameter", isActive, DbType.Boolean);
+            }
+
+            if (parameters.Length > 0)
+            {
+                sql += parameters.Substring(1);
+            }
+
+            IEnumerable<UserComplete> users = _dapper.LoadDataWithParameters<UserComplete>(
+                sql,
+                sqlParameters
+            );
+            return users;
+        }
+
+        [HttpPut("UpsertUser")]
+        public IActionResult UpsertUser(UserComplete user)
+        {
+            if (_reusableSql.UpsertUser(user))
+            {
+                return Ok();
+            }
+
+            throw new Exception("Failed to update user");
+        }
+
+        [HttpDelete("DeleteUser/{userId}")]
+        public IActionResult DeleteUser(int userId)
+        {
+            string sql =
+                @"UsersSchema.spUser_Delete
+                @UserId = @UserIdParameter";
+
+            DynamicParameters sqlParameters = new DynamicParameters();
+            sqlParameters.Add("@UserIdParameter", userId, DbType.Int32);
+
+            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
+            {
+                return Ok();
+            }
+
+            throw new Exception("Failed to delete user");
+        }
     }
 }
-}
-
