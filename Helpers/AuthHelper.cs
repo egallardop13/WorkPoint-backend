@@ -77,7 +77,7 @@ namespace DotnetAPI.Helpers
             byte[] passwordHash = GetPasswordHash(userForSetPassword.Password, passwordSalt);
 
             string sqlAddAuth =
-                @"EXEC UsersSchema.spRegistration_Upsert
+                @"EXEC WorkPointSchema.spRegistration_Upsert
                         @Email = @EmailParam,
                         @PasswordHash = @PasswordHashParam, 
                         @PasswordSalt = @PasswordSaltParam";

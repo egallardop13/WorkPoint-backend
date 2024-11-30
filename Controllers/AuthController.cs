@@ -49,7 +49,7 @@ namespace DotnetAPI.Controllers
             if (userForRegistration.Password == userForRegistration.PasswordConfirm)
             {
                 string sqlCheckUserExists =
-                    "SELECT Email FROM UsersSchema.Auth WHERE Email = '"
+                    "SELECT Email FROM WorkPointSchema.Auth WHERE Email = '"
                     + userForRegistration.Email
                     + "'";
                 IEnumerable<string> existingUsers = _dapper.LoadData<string>(sqlCheckUserExists);
@@ -92,7 +92,7 @@ namespace DotnetAPI.Controllers
         public IActionResult Login(UserForLoginDto userForLogin)
         {
             string sqlForHashAndSalt =
-                @"EXEC UsersSchema.spLoginConfirmation_Get 
+                @"EXEC WorkPointSchema.spLoginConfirmation_Get 
                 @Email = @EmailParam";
             DynamicParameters sqlParameters = new DynamicParameters();
 
@@ -119,7 +119,7 @@ namespace DotnetAPI.Controllers
 
             string sqlForUserId =
                 @"
-            SELECT UserId FROM UsersSchema.Users WHERE Email = '"
+            SELECT UserId FROM WorkPointSchema.Users WHERE Email = '"
                 + userForLogin.Email
                 + "'";
 
@@ -134,7 +134,7 @@ namespace DotnetAPI.Controllers
         public IActionResult RefreshToken()
         {
             string userId = User.FindFirst("userId")?.Value + "";
-            string userIdSql = "SELECT UserId FROM UsersSchema.Users WHERE UserId = " + userId;
+            string userIdSql = "SELECT UserId FROM WorkPointSchema.Users WHERE UserId = " + userId;
 
             int userIdFromDB = _dapper.LoadDataSingle<int>(userIdSql);
             return Ok(

@@ -27,7 +27,7 @@ namespace DotnetAPI.Controllers
             string searchParam = "None"
         )
         {
-            string sql = @"EXEC UsersSchema.spPost_Get";
+            string sql = @"EXEC WorkPointSchema.spPost_Get";
             string stringParameters = "";
 
             DynamicParameters sqlParameters = new DynamicParameters();
@@ -58,7 +58,7 @@ namespace DotnetAPI.Controllers
         [HttpGet("MyPosts")]
         public IEnumerable<Post> GetMyPosts()
         {
-            string sql = @"EXEC UsersSchema.spPost_Get @PostId = @UserIdParameter";
+            string sql = @"EXEC WorkPointSchema.spPost_Get @PostId = @UserIdParameter";
             DynamicParameters sqlParameters = new DynamicParameters();
             sqlParameters.Add(
                 "@UserIdParameter",
@@ -72,7 +72,7 @@ namespace DotnetAPI.Controllers
         public IActionResult UpsertPost(Post postToUpsert)
         {
             string sql =
-                @"EXEC UsersSchema.spPosts_Upsert 
+                @"EXEC WorkPointSchema.spPosts_Upsert 
                 @UserId = @UserIdParameter, 
                 @PostTitle = @PostTitleParameter, 
                 @PostContent = @PostContentParameter";
@@ -103,7 +103,7 @@ namespace DotnetAPI.Controllers
         // {
         //     string sql =
         //         @"
-        //     UPDATE UsersSchema.Posts
+        //     UPDATE WorkPointSchema.Posts
         //         SET PostTitle = '"
         //         + postToEdit.PostTitle
         //         + "', PostContent = '"
@@ -124,7 +124,7 @@ namespace DotnetAPI.Controllers
         public IActionResult DeletePost(int postId)
         {
             string sql =
-                @"EXEC UsersSchema.spPost_Delete @PostId = @PostIdParameter, 
+                @"EXEC WorkPointSchema.spPost_Delete @PostId = @PostIdParameter, 
                 @UserId = " + this.User.FindFirst("userId")?.Value;
 
             DynamicParameters sqlParameters = new DynamicParameters();

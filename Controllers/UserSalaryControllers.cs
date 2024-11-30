@@ -22,7 +22,7 @@ namespace DotnetAPI.Controllers
             string sql =
                 @"SELECT [UserId],
                 [Salary]
-                FROM UsersSchema.UserSalary";
+                FROM WorkPointSchema.UserSalary";
             IEnumerable<UserSalary> users = _dapper.LoadData<UserSalary>(sql);
             return users;
             // string[] responseArray = new string[] {"Test1", "Test2", testValue};
@@ -33,7 +33,7 @@ namespace DotnetAPI.Controllers
         public IActionResult DeleteUserSalary(int userId)
         {
             string sql =
-                @"DELETE FROM UsersSchema.UserSalary
+                @"DELETE FROM WorkPointSchema.UserSalary
         WHERE UserId = " + userId.ToString();
 
             Console.WriteLine(sql);

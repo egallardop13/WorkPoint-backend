@@ -23,7 +23,7 @@ namespace DotnetAPI.Controllers
                 @"SELECT [UserId],
     [JobTitle],
     [Department]   
-FROM UsersSchema.UserJobInfo";
+FROM WorkPointSchema.UserJobInfo";
 
             IEnumerable<UserJobInfo> users = _dapper.LoadData<UserJobInfo>(sql);
             return users;
@@ -35,7 +35,7 @@ FROM UsersSchema.UserJobInfo";
         public IActionResult DeleteUser(int userId)
         {
             string sql =
-                @"DELETE FROM UsersSchema.UserJobInfo
+                @"DELETE FROM WorkPointSchema.UserJobInfo
         WHERE UserId = " + userId.ToString();
 
             Console.WriteLine(sql);

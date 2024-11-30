@@ -27,7 +27,7 @@ namespace DotnetAPI.Controllers
         [HttpGet("GetUsers/{userId}/{isActive}")]
         public IEnumerable<UserComplete> GetUsers(int userId, bool isActive)
         {
-            string sql = @"EXEC UsersSchema.spUsers_Get";
+            string sql = @"EXEC WorkPointSchema.spUsers_Get";
             string parameters = "";
             DynamicParameters sqlParameters = new DynamicParameters();
 
@@ -69,7 +69,7 @@ namespace DotnetAPI.Controllers
         public IActionResult DeleteUser(int userId)
         {
             string sql =
-                @"UsersSchema.spUser_Delete
+                @"WorkPointSchema.spUser_Delete
                 @UserId = @UserIdParameter";
 
             DynamicParameters sqlParameters = new DynamicParameters();

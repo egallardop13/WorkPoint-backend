@@ -12,35 +12,35 @@ namespace DotnetAPI.Models
         public string Department { get; set; }
         public decimal Salary { get; set; }
         public decimal AvgSalary { get; set; }
-
+        public DateTime DateHired { get; set; }
+        public DateTime DateExited { get; set; }
 
         public UserComplete()
         {
-            if(FirstName == null)
+            if (FirstName == null)
             {
                 FirstName = "";
             }
-            if(LastName == null)
+            if (LastName == null)
             {
                 LastName = "";
             }
-            if(Email == null)
+            if (Email == null)
             {
                 Email = "";
-        }
-        if( Gender == null) 
-        {
-            Gender = "";
-        }
-         if(JobTitle == null)
+            }
+            if (Gender == null)
+            {
+                Gender = "";
+            }
+            if (JobTitle == null)
             {
                 JobTitle = "";
             }
-            if(Department == null)
+            if (Department == null)
             {
                 Department = "";
             }
-            
-    }
+        }
     }
 }

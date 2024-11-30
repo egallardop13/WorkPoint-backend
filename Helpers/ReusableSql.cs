@@ -18,7 +18,7 @@ namespace DotnetAPI.Helpers
         public bool UpsertUser(UserComplete user)
         {
             string sql =
-                @"EXEC UsersSchema.spUser_Upsert
+                @"EXEC WorkPointSchema.spUser_Upsert
                 @FirstName = @FirstNameParameter,
                 @LastName = @LastNameParameter,
                 @Email = @EmailParameter,
@@ -27,6 +27,8 @@ namespace DotnetAPI.Helpers
                 @JobTitle = @JobTitleParameter,
                 @Department = @DepartmentParameter,
                 @Salary = @SalaryParameter,
+                @DateHired = @DateHiredParameter,
+                @DateExited = @DateExitedParameter,
                 @UserId = @UserIdParameter";
 
             DynamicParameters sqlParameters = new DynamicParameters();
@@ -40,6 +42,8 @@ namespace DotnetAPI.Helpers
             sqlParameters.Add("@DepartmentParameter", user.Department, DbType.String);
             sqlParameters.Add("@SalaryParameter", user.Salary, DbType.String);
             sqlParameters.Add("@UserIdParameter", user.UserId, DbType.Int32);
+            sqlParameters.Add("@DateHiredParameter", user.DateHired, DbType.DateTime);
+            sqlParameters.Add("@DateExitedParameter", user.DateExited, DbType.DateTime);
 
             return _dapper.ExecuteSqlWithParameter(sql, sqlParameters);
         }
