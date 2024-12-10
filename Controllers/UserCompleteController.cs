@@ -54,6 +54,74 @@ namespace DotnetAPI.Controllers
             return users;
         }
 
+        [HttpGet("GetUsersWithPagination/{userId}/{isActive}/{Page}/{Limit}")]
+        public IEnumerable<UserComplete> GetUsersWithPagination(
+            int userId,
+            bool isActive,
+            int Page,
+            int Limit
+        )
+        {
+            string sql = @"EXEC WorkPointSchema.spUsers_Get_WithPagination";
+            string parameters = "";
+            DynamicParameters sqlParameters = new DynamicParameters();
+
+            if (userId != 0)
+            {
+                parameters += ", @UserId= @UserIdParameter";
+                sqlParameters.Add("@UserIdParameter", userId, DbType.Int32);
+            }
+            else
+            {
+                parameters += ", @UserId= @UserIdParameter";
+                sqlParameters.Add("@UserIdParameter", null, DbType.Int32);
+            }
+            if (isActive)
+            {
+                parameters += ", @Active= @ActiveParameter";
+                sqlParameters.Add("@ActiveParameter", isActive, DbType.Boolean);
+            }
+            else
+            {
+                parameters += ", @Active= @ActiveParameter";
+                sqlParameters.Add("@ActiveParameter", null, DbType.Boolean);
+            }
+            if (Page != 0)
+            {
+                parameters += ", @Page= @PageParameter";
+                sqlParameters.Add("@PageParameter", Page, DbType.Int32);
+            }
+            else
+            {
+                parameters += ", @Page= @PageParameter";
+                sqlParameters.Add("@PageParameter", 1, DbType.Int32);
+            }
+            if (Limit != 0)
+            {
+                parameters += ", @Limit= @LimitParameter";
+                sqlParameters.Add("@LimitParameter", Limit, DbType.Int32);
+            }
+            else
+            {
+                parameters += ", @Limit= @LimitParameter";
+                sqlParameters.Add("@LimitParameter", 10, DbType.Int32);
+            }
+
+            if (parameters.Length > 0)
+            {
+                sql += parameters.Substring(1);
+            }
+
+            Console.WriteLine(sql);
+
+            IEnumerable<UserComplete> users = _dapper.LoadDataWithParameters<UserComplete>(
+                sql,
+                sqlParameters
+            );
+            Console.WriteLine(users);
+            return users;
+        }
+
         [HttpPut("UpsertUser")]
         public IActionResult UpsertUser(UserComplete user)
         {
