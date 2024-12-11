@@ -1,10 +1,12 @@
 using DotnetAPI.Data;
 using DotnetAPI.Dtos;
 using DotnetAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DotnetAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class UserJobInfoController : ControllerBase
