@@ -122,6 +122,58 @@ namespace DotnetAPI.Controllers
             return users;
         }
 
+        [HttpGet("GetMetrics/{year}/{status}")]
+        public MetricsInfo GetMetrics(int year, bool status)
+        {
+            string sql = @"EXEC WorkPointSchema.spGet_Metrics";
+            string parameters = "";
+            DynamicParameters sqlParameters = new DynamicParameters();
+
+            // Add parameters for the stored procedure
+            parameters += ", @Year = @YearParameter";
+            sqlParameters.Add("@YearParameter", year, DbType.Int32);
+
+            parameters += ", @Status = @StatusParameter";
+            sqlParameters.Add("@StatusParameter", status, DbType.Boolean);
+
+            if (parameters.Length > 0)
+            {
+                sql += parameters.Substring(1); // Remove leading comma
+            }
+
+            // Execute the stored procedure and retrieve the raw data
+            var metricsRaw = _dapper.LoadDataSingleWithParameters<dynamic>(sql, sqlParameters);
+
+            // Ensure MonthlyBreakdown is a string before parsing
+            string monthlyBreakdownRaw = metricsRaw.MonthlyBreakdown?.ToString() ?? string.Empty;
+
+            // Parse the MonthlyBreakdown string into a collection
+            var monthlyBreakdown = new List<MonthData>();
+            if (!string.IsNullOrWhiteSpace(monthlyBreakdownRaw))
+            {
+                monthlyBreakdown = monthlyBreakdownRaw
+                    .Split(',')
+                    .Select(item =>
+                    {
+                        var parts = item.Split(':'); // Split "MonthName:Count" pairs
+                        return new MonthData
+                        {
+                            Month = parts[0].Trim(),
+                            Count = int.TryParse(parts[1].Trim(), out int count) ? count : 0,
+                        };
+                    })
+                    .ToList();
+            }
+
+            // Map the results to the MetricsInfo model
+            return new MetricsInfo
+            {
+                TotalEmployees = metricsRaw.TotalEmployees,
+                JoinedOrLeftYearly = metricsRaw.JoinedOrLeftYearly,
+                MonthlyBreakdown = monthlyBreakdown,
+            };
+        }
+
         [HttpPut("UpsertUser")]
         public IActionResult UpsertUser(UserComplete user)
         {

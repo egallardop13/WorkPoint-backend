@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DotnetAPI.Controllers
 {
-    // [Authorize]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class UserSalaryController : ControllerBase
@@ -43,7 +43,7 @@ namespace DotnetAPI.Controllers
             if (!string.IsNullOrWhiteSpace(department))
             {
                 parameters += ", @Department = @DepartmentParameter";
-                sqlParameters.Add("@DepartmentParameter", null, DbType.String);
+                sqlParameters.Add("@DepartmentParameter", department, DbType.String);
             }
 
             if (parameters.Length > 0)
