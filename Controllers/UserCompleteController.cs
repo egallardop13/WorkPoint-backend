@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DotnetAPI.Controllers
 {
-    [Authorize]
+    // [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class UserCompleteController : ControllerBase
@@ -55,17 +55,13 @@ namespace DotnetAPI.Controllers
         }
 
         [HttpGet("GetUsersWithPagination/{userId}/{isActive}/{Page}/{Limit}")]
-        public IEnumerable<UserComplete> GetUsersWithPagination(
-            int userId,
-            bool isActive,
-            int Page,
-            int Limit
-        )
+        public IActionResult GetUsersWithPagination(int userId, bool isActive, int Page, int Limit)
         {
             string sql = @"EXEC WorkPointSchema.spUsers_Get_WithPagination";
             string parameters = "";
             DynamicParameters sqlParameters = new DynamicParameters();
 
+            // Safely add @UserId parameter
             if (userId != 0)
             {
                 parameters += ", @UserId= @UserIdParameter";
@@ -76,6 +72,8 @@ namespace DotnetAPI.Controllers
                 parameters += ", @UserId= @UserIdParameter";
                 sqlParameters.Add("@UserIdParameter", null, DbType.Int32);
             }
+
+            // Safely add @Active parameter
             if (isActive)
             {
                 parameters += ", @Active= @ActiveParameter";
@@ -86,7 +84,9 @@ namespace DotnetAPI.Controllers
                 parameters += ", @Active= @ActiveParameter";
                 sqlParameters.Add("@ActiveParameter", null, DbType.Boolean);
             }
-            if (Page != 0)
+
+            // Safely add @Page parameter
+            if (Page > 0)
             {
                 parameters += ", @Page= @PageParameter";
                 sqlParameters.Add("@PageParameter", Page, DbType.Int32);
@@ -96,7 +96,9 @@ namespace DotnetAPI.Controllers
                 parameters += ", @Page= @PageParameter";
                 sqlParameters.Add("@PageParameter", 1, DbType.Int32);
             }
-            if (Limit != 0)
+
+            // Safely add @Limit parameter
+            if (Limit > 0)
             {
                 parameters += ", @Limit= @LimitParameter";
                 sqlParameters.Add("@LimitParameter", Limit, DbType.Int32);
@@ -107,19 +109,42 @@ namespace DotnetAPI.Controllers
                 sqlParameters.Add("@LimitParameter", 10, DbType.Int32);
             }
 
+            // Build the final SQL query with parameters
             if (parameters.Length > 0)
             {
-                sql += parameters.Substring(1);
+                sql += parameters.Substring(1); // Remove the leading comma
             }
 
+            // Log the constructed SQL for debugging
             Console.WriteLine(sql);
 
-            IEnumerable<UserComplete> users = _dapper.LoadDataWithParameters<UserComplete>(
-                sql,
-                sqlParameters
+            // Execute the stored procedure
+            var result = _dapper
+                .LoadDataWithParameters<dynamic>(sql, sqlParameters)
+                .FirstOrDefault();
+
+            // Ensure result is not null
+            if (result == null)
+            {
+                return NotFound(
+                    new
+                    {
+                        message = "No data found.",
+                        arrayUserComplete = new List<UserComplete>(),
+                        totalPages = 0,
+                    }
+                );
+            }
+
+            // Return result in the desired format
+            return Ok(
+                new
+                {
+                    arrayUserComplete = result.UserComplete, // Extracted JSON array from SP
+                    totalPages = result.totalPages // Extracted total pages
+                    ,
+                }
             );
-            Console.WriteLine(users);
-            return users;
         }
 
         [HttpGet("GetMetrics/{year}/{status}")]
