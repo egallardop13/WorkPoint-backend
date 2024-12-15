@@ -9,7 +9,7 @@ using Microsoft.Data.SqlClient;
 
 namespace DotnetAPI.Controllers
 {
-    // [Authorize]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class UserJobInfoController : ControllerBase

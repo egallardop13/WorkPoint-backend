@@ -13,39 +13,52 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("DevCors", (corsbuilder) =>
+    options.AddPolicy(
+        "DevCors",
+        (corsbuilder) =>
         {
-            corsbuilder.WithOrigins("http://localhost:3000", "http://localhost:4200",   "http://localhost:8000")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-        });
-          options.AddPolicy("ProdCors", (corsbuilder) =>
+            corsbuilder
+                .WithOrigins(
+                    "http://localhost:3000",
+                    "http://localhost:4200",
+                    "http://localhost:8000"
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        }
+    );
+    options.AddPolicy(
+        "ProdCors",
+        (corsbuilder) =>
         {
-            corsbuilder.WithOrigins("http://localhost:3000", "http://localhost:4200",   "http://localhost:8000")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-        });
+            corsbuilder
+                .WithOrigins(
+                    "http://localhost:3000",
+                    "http://localhost:4200",
+                    "http://localhost:8000"
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        }
+    );
 });
 
-string? tokenKeyString = 
-builder.Configuration.GetSection("AppSettings:TokenKey").Value;
+string? tokenKeyString = builder.Configuration.GetSection("AppSettings:TokenKey").Value;
 
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = new 
-TokenValidationParameters()
+        options.TokenValidationParameters = new TokenValidationParameters()
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new 
-SymmetricSecurityKey(Encoding.ASCII.GetBytes(
-            tokenKeyString != null ? tokenKeyString : ""
-            )),
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.ASCII.GetBytes(tokenKeyString != null ? tokenKeyString : "")
+            ),
             ValidateIssuer = false,
-            ValidateAudience = false
+            ValidateAudience = false,
         };
     });
 
@@ -64,17 +77,16 @@ if (app.Environment.IsDevelopment())
     app.UseCors("DevCors");
     app.UseSwagger();
     app.UseSwaggerUI();
-}else{
-    app.UseCors("ProdCors");
-app.UseHttpsRedirection();
-
 }
-
-
+else
+{
+    app.UseCors("ProdCors");
+    app.UseHttpsRedirection();
+}
 
 // app.MapGet("/weatherforecast", () =>
 // {
-    
+
 // })
 // .WithName("GetWeatherForecast")
 // .WithOpenApi();
@@ -84,7 +96,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-
 app.Run();
-
-

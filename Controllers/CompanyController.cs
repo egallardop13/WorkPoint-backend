@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DotnetAPI.Controllers
 {
-    // [Authorize]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class CompanyController : ControllerBase
@@ -36,6 +36,40 @@ namespace DotnetAPI.Controllers
             );
 
             return companyInfo;
+        }
+
+        [HttpGet("GetBudget/{year}")]
+        public IActionResult GetBudget(int year)
+        {
+            if (year < 1900 || year > 2100) // Basic validation for a valid year
+            {
+                return BadRequest("Invalid year. Please provide a year between 1900 and 2100.");
+            }
+
+            string sql = @"EXEC WorkPointSchema.spGet_Budget";
+            string parameters = "";
+            DynamicParameters sqlParameters = new DynamicParameters();
+
+            // Add the year parameter
+            parameters += " @Year = @YearParameter";
+            sqlParameters.Add("@YearParameter", year, DbType.Int32);
+
+            // Append parameters to the SQL query
+            sql += parameters;
+
+            try
+            {
+                // Execute the stored procedure and fetch the data
+                var budgetData = _dapper.LoadDataWithParameters<Budget>(sql, sqlParameters);
+
+                return Ok(budgetData);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Error: {ex.Message}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

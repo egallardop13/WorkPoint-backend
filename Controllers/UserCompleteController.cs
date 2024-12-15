@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DotnetAPI.Controllers
 {
-    // [Authorize]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class UserCompleteController : ControllerBase
