@@ -38,6 +38,56 @@ namespace DotnetAPI.Controllers
             return companyInfo;
         }
 
+        [HttpGet("GetMetrics/{year}/{status}")]
+        public MetricsInfo GetMetrics(int year, bool status)
+        {
+            if (year < 1900 || year > 2100)
+            {
+                throw new ArgumentException(
+                    "Invalid year. Please provide a year between 1900 and 2100."
+                );
+            }
+
+            string sql = @"EXEC WorkPointSchema.spGet_Metrics";
+            string parameters = "";
+            DynamicParameters sqlParameters = new DynamicParameters();
+
+            parameters += ", @Year = @YearParameter";
+            sqlParameters.Add("@YearParameter", year, DbType.Int32);
+
+            parameters += ", @Status = @StatusParameter";
+            sqlParameters.Add("@StatusParameter", status, DbType.Boolean);
+
+            if (parameters.Length > 0)
+            {
+                sql += parameters.Substring(1); // Remove leading comma
+            }
+
+            // Fetch raw data from the stored procedure
+            var metricsRaw = _dapper.LoadDataSingleWithParameters<dynamic>(sql, sqlParameters);
+
+            // Log raw data for debugging
+            Console.WriteLine($"MonthlyBreakdown Raw: {metricsRaw.MonthlyBreakdown}");
+            Console.WriteLine($"TotalSalaryBreakdown Raw: {metricsRaw.TotalSalaryBreakdown}");
+
+            // Parse breakdowns
+            var monthlyBreakdown = DataParserHelper.ParseMonthlyData(
+                metricsRaw.MonthlyBreakdown?.ToString()
+            );
+            var totalMonthlyBreakdown = DataParserHelper.ParseMonthlyData(
+                metricsRaw.TotalSalaryBreakdown?.ToString()
+            );
+
+            // Map to MetricsInfo
+            return new MetricsInfo
+            {
+                TotalEmployees = metricsRaw.TotalEmployees,
+                JoinedOrLeftYearly = metricsRaw.JoinedOrLeftYearly,
+                MonthlyBreakdown = monthlyBreakdown,
+                TotalMonthlyBreakdown = totalMonthlyBreakdown,
+            };
+        }
+
         [HttpGet("GetBudget/{year}")]
         public IActionResult GetBudget(int year)
         {

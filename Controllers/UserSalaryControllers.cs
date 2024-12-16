@@ -33,7 +33,7 @@ namespace DotnetAPI.Controllers
             // return responseArray;
         }
 
-        [HttpGet("GetDepartmentsInfo/{department?}")]
+        [HttpGet("GetDepartmentsInfo/")]
         public IEnumerable<DepartmentInfo> GetDepartmentsInfo(string? department = null)
         {
             string sql = @"EXEC WorkPointSchema.spGet_DepartmentsInfo";
