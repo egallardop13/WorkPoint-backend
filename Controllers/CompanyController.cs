@@ -67,15 +67,10 @@ namespace DotnetAPI.Controllers
             var metricsRaw = _dapper.LoadDataSingleWithParameters<dynamic>(sql, sqlParameters);
 
             // Log raw data for debugging
-            Console.WriteLine($"MonthlyBreakdown Raw: {metricsRaw.MonthlyBreakdown}");
-            Console.WriteLine($"TotalSalaryBreakdown Raw: {metricsRaw.TotalSalaryBreakdown}");
 
             // Parse breakdowns
             var monthlyBreakdown = DataParserHelper.ParseMonthlyData(
                 metricsRaw.MonthlyBreakdown?.ToString()
-            );
-            var totalMonthlyBreakdown = DataParserHelper.ParseMonthlyData(
-                metricsRaw.TotalSalaryBreakdown?.ToString()
             );
 
             // Map to MetricsInfo
@@ -84,7 +79,6 @@ namespace DotnetAPI.Controllers
                 TotalEmployees = metricsRaw.TotalEmployees,
                 JoinedOrLeftYearly = metricsRaw.JoinedOrLeftYearly,
                 MonthlyBreakdown = monthlyBreakdown,
-                TotalMonthlyBreakdown = totalMonthlyBreakdown,
             };
         }
 
