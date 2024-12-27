@@ -26,7 +26,7 @@ namespace DotnetAPI.Controllers
             string department,
             int page,
             int limit,
-            string? query = null
+            [FromQuery] string? query = null // Keep 'query' as a query string parameter
         )
         {
             if (string.IsNullOrWhiteSpace(department) || page < 1 || limit < 1)
@@ -72,10 +72,8 @@ namespace DotnetAPI.Controllers
 
             try
             {
-                // Fetch the unified result set from the stored procedure
                 var result = _dapper.LoadDataWithParameters<dynamic>(sql, sqlParameters);
 
-                // Map the result to the appropriate models
                 var summary = new DepartmentSummary
                 {
                     Users = result
@@ -106,7 +104,6 @@ namespace DotnetAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception and return an error response
                 Console.WriteLine($"Error: {ex.Message}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }

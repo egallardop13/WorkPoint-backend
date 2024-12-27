@@ -54,8 +54,14 @@ namespace DotnetAPI.Controllers
             return users;
         }
 
-        [HttpGet("GetUsersWithPagination/{userId}/{isActive}/{Page}/{Limit}")]
-        public IActionResult GetUsersWithPagination(int userId, bool isActive, int Page, int Limit)
+        [HttpGet("GetUsersWithPagination/{userId}/{isActive}/{Page}/{Limit}/{Name?}")]
+        public IActionResult GetUsersWithPagination(
+            int userId,
+            bool isActive,
+            int Page,
+            int Limit,
+            string? Name = null
+        )
         {
             string sql = @"EXEC WorkPointSchema.spUsers_Get_WithPagination";
             string parameters = "";
@@ -74,39 +80,27 @@ namespace DotnetAPI.Controllers
             }
 
             // Safely add @Active parameter
-            if (isActive)
-            {
-                parameters += ", @Active= @ActiveParameter";
-                sqlParameters.Add("@ActiveParameter", isActive, DbType.Boolean);
-            }
-            else
-            {
-                parameters += ", @Active= @ActiveParameter";
-                sqlParameters.Add("@ActiveParameter", null, DbType.Boolean);
-            }
+            parameters += ", @Active= @ActiveParameter";
+            sqlParameters.Add("@ActiveParameter", isActive ? (object)true : null, DbType.Boolean);
 
             // Safely add @Page parameter
-            if (Page > 0)
-            {
-                parameters += ", @Page= @PageParameter";
-                sqlParameters.Add("@PageParameter", Page, DbType.Int32);
-            }
-            else
-            {
-                parameters += ", @Page= @PageParameter";
-                sqlParameters.Add("@PageParameter", 1, DbType.Int32);
-            }
+            parameters += ", @Page= @PageParameter";
+            sqlParameters.Add("@PageParameter", Page > 0 ? Page : 1, DbType.Int32);
 
             // Safely add @Limit parameter
-            if (Limit > 0)
+            parameters += ", @Limit= @LimitParameter";
+            sqlParameters.Add("@LimitParameter", Limit > 0 ? Limit : 10, DbType.Int32);
+
+            // Safely add @Name parameter
+            if (!string.IsNullOrWhiteSpace(Name))
             {
-                parameters += ", @Limit= @LimitParameter";
-                sqlParameters.Add("@LimitParameter", Limit, DbType.Int32);
+                parameters += ", @Name= @NameParameter";
+                sqlParameters.Add("@NameParameter", Name, DbType.String);
             }
             else
             {
-                parameters += ", @Limit= @LimitParameter";
-                sqlParameters.Add("@LimitParameter", 10, DbType.Int32);
+                parameters += ", @Name= @NameParameter";
+                sqlParameters.Add("@NameParameter", null, DbType.String);
             }
 
             // Build the final SQL query with parameters
