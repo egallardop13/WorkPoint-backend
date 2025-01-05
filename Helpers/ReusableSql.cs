@@ -1,6 +1,7 @@
 using System.Data;
 using Dapper;
 using DotnetAPI.Data;
+using DotnetAPI.Dtos;
 using DotnetAPI.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -15,7 +16,7 @@ namespace DotnetAPI.Helpers
             _dapper = new DataContextDapper(config);
         }
 
-        public bool UpsertUser(UserComplete user)
+        public UpsertDto UpsertUser(UserComplete user)
         {
             string sql =
                 @"EXEC WorkPointSchema.spUser_Upsert
@@ -45,7 +46,10 @@ namespace DotnetAPI.Helpers
             sqlParameters.Add("@DateHiredParameter", user.DateHired, DbType.DateTime);
             sqlParameters.Add("@DateExitedParameter", user.DateExited, DbType.DateTime);
 
-            return _dapper.ExecuteSqlWithParameter(sql, sqlParameters);
+            UpsertDto upsert = new UpsertDto();
+            upsert.Response = _dapper.LoadDataSingleWithParameters<int>(sql, sqlParameters);
+            return upsert;
+            // return _dapper.ExecuteSqlWithParameter(sql, sqlParameters);
         }
     }
 }

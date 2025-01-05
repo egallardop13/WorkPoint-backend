@@ -3,9 +3,9 @@ namespace DotnetAPI.Models
     public class Budget
     {
         public string MonthName { get; set; }
-        public int TotalBudget { get; set; }
-        public int ActiveBudget { get; set; }
-        public int ExitedBudget { get; set; }
+        public decimal TotalBudget { get; set; }
+        public decimal ActiveBudget { get; set; }
+        public decimal ExitedBudget { get; set; }
 
         public Budget()
         {

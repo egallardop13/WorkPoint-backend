@@ -34,7 +34,11 @@ namespace DotnetAPI.Controllers
         }
 
         [HttpGet("GetDepartmentsInfo/{department?}")]
-        public IEnumerable<DepartmentInfo> GetDepartmentsInfo(string? department = null)
+        public IEnumerable<DepartmentInfo> GetDepartmentsInfo(
+            string? department = null,
+            string? query = null,
+            string? sort = null
+        )
         {
             string sql = @"EXEC WorkPointSchema.spGet_DepartmentsInfo";
             string parameters = "";
@@ -45,7 +49,16 @@ namespace DotnetAPI.Controllers
                 parameters += ", @Department = @DepartmentParameter";
                 sqlParameters.Add("@DepartmentParameter", department, DbType.String);
             }
-
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                parameters += ", @Query = @QueryParameter";
+                sqlParameters.Add("@QueryParameter", query, DbType.String);
+            }
+            if (!string.IsNullOrWhiteSpace(sort))
+            {
+                parameters += ", @Sort = @SortParameter";
+                sqlParameters.Add("@SortParameter", sort, DbType.String);
+            }
             if (parameters.Length > 0)
             {
                 sql += parameters.Substring(1); // Remove leading comma

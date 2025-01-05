@@ -54,34 +54,29 @@ namespace DotnetAPI.Controllers
             return users;
         }
 
-        [HttpGet("GetUsersWithPagination/{userId}/{isActive}/{Page}/{Limit}/{Name?}")]
+        [HttpGet("GetUsersWithPagination/{Page}/{Limit}")]
         public IActionResult GetUsersWithPagination(
-            int userId,
-            bool isActive,
             int Page,
             int Limit,
-            string? Name = null
+            string? query = null,
+            string? sort = null
         )
         {
             string sql = @"EXEC WorkPointSchema.spUsers_Get_WithPagination";
             string parameters = "";
             DynamicParameters sqlParameters = new DynamicParameters();
 
-            // Safely add @UserId parameter
-            if (userId != 0)
+            // Safely add @query parameter
+            if (!string.IsNullOrWhiteSpace(query))
             {
-                parameters += ", @UserId= @UserIdParameter";
-                sqlParameters.Add("@UserIdParameter", userId, DbType.Int32);
+                parameters += ", @Query = @QueryParameter";
+                sqlParameters.Add("@QueryParameter", query, DbType.String);
             }
-            else
+            if (!string.IsNullOrWhiteSpace(sort))
             {
-                parameters += ", @UserId= @UserIdParameter";
-                sqlParameters.Add("@UserIdParameter", null, DbType.Int32);
+                parameters += ", @Sort = @SortParameter";
+                sqlParameters.Add("@SortParameter", sort, DbType.String);
             }
-
-            // Safely add @Active parameter
-            parameters += ", @Active= @ActiveParameter";
-            sqlParameters.Add("@ActiveParameter", isActive ? (object)true : null, DbType.Boolean);
 
             // Safely add @Page parameter
             parameters += ", @Page= @PageParameter";
@@ -90,18 +85,6 @@ namespace DotnetAPI.Controllers
             // Safely add @Limit parameter
             parameters += ", @Limit= @LimitParameter";
             sqlParameters.Add("@LimitParameter", Limit > 0 ? Limit : 10, DbType.Int32);
-
-            // Safely add @Name parameter
-            if (!string.IsNullOrWhiteSpace(Name))
-            {
-                parameters += ", @Name= @NameParameter";
-                sqlParameters.Add("@NameParameter", Name, DbType.String);
-            }
-            else
-            {
-                parameters += ", @Name= @NameParameter";
-                sqlParameters.Add("@NameParameter", null, DbType.String);
-            }
 
             // Build the final SQL query with parameters
             if (parameters.Length > 0)
@@ -135,7 +118,8 @@ namespace DotnetAPI.Controllers
                 new
                 {
                     arrayUserComplete = result.UserComplete, // Extracted JSON array from SP
-                    totalPages = result.totalPages // Extracted total pages
+                    totalPages = result.totalPages, // Extracted total pages
+                    totalUsers = result.totalUsers // Extracted total users
                     ,
                 }
             );
@@ -144,9 +128,19 @@ namespace DotnetAPI.Controllers
         [HttpPut("UpsertUser")]
         public IActionResult UpsertUser(UserComplete user)
         {
-            if (_reusableSql.UpsertUser(user))
+            int result = _reusableSql.UpsertUser(user).Response;
+            if (result == 1)
             {
-                return Ok();
+                return Ok(
+                    new
+                    {
+                        message = "User updated or created successfully.", // Extracted JSON array from SP
+                    }
+                );
+            }
+            else if (result == 0)
+            {
+                return StatusCode(409, new { message = "Email already exists.", status = 409 });
             }
 
             throw new Exception("Failed to update user");
