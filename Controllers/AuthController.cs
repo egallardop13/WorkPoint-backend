@@ -65,7 +65,7 @@ namespace DotnetAPI.Controllers
                         UserComplete userComplete = _mapper.Map<UserComplete>(userForRegistration);
                         userComplete.Active = true;
 
-                        if (_reusableSql.UpsertUser(userComplete))
+                        if (_reusableSql.UpsertUser(userComplete).Response == 1)
                         {
                             return Ok();
                         }
