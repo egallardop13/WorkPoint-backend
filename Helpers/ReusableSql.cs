@@ -3,7 +3,6 @@ using Dapper;
 using DotnetAPI.Data;
 using DotnetAPI.Dtos;
 using DotnetAPI.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace DotnetAPI.Helpers
 {
@@ -49,7 +48,6 @@ namespace DotnetAPI.Helpers
             UpsertDto upsert = new UpsertDto();
             upsert.Response = _dapper.LoadDataSingleWithParameters<int>(sql, sqlParameters);
             return upsert;
-            // return _dapper.ExecuteSqlWithParameter(sql, sqlParameters);
         }
     }
 }

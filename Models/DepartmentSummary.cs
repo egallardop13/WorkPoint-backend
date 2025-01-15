@@ -1,5 +1,3 @@
-using DotnetAPI.Models;
-
 namespace DotnetAPI.Models
 {
     public class DepartmentSummary

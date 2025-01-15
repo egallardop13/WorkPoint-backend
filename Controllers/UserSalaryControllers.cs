@@ -1,7 +1,6 @@
 using System.Data;
 using Dapper;
 using DotnetAPI.Data;
-using DotnetAPI.Dtos;
 using DotnetAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

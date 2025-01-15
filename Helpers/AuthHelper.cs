@@ -7,7 +7,6 @@ using Dapper;
 using DotnetAPI.Data;
 using DotnetAPI.Dtos;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Tokens;
 
 namespace DotnetAPI.Helpers
@@ -81,25 +80,6 @@ namespace DotnetAPI.Helpers
                         @Email = @EmailParam,
                         @PasswordHash = @PasswordHashParam, 
                         @PasswordSalt = @PasswordSaltParam";
-            // List<SqlParameter> sqlParameters = new List<SqlParameter>();
-
-            // SqlParameter emailParamater = new SqlParameter("@EmailParam", SqlDbType.VarChar);
-            // emailParamater.Value = userForSetPassword.Email;
-            // sqlParameters.Add(emailParamater);
-
-            // SqlParameter passwordSaltParamater = new SqlParameter(
-            //     "@PasswordSaltParam",
-            //     SqlDbType.VarBinary
-            // );
-            // passwordSaltParamater.Value = passwordSalt;
-            // sqlParameters.Add(passwordSaltParamater);
-
-            // SqlParameter passwordHashParamater = new SqlParameter(
-            //     "@PasswordHashParam",
-            //     SqlDbType.VarBinary
-            // );
-            // passwordHashParamater.Value = passwordHash;
-            // sqlParameters.Add(passwordHashParamater);
 
             DynamicParameters sqlParameters = new DynamicParameters();
 
