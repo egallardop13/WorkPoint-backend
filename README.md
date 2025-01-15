@@ -29,7 +29,7 @@ Follow these steps to set up the backend locally:
 
 1. **Clone the repository**
    ```bash
-   git clone [https://github.com/egallardop13/WorkPoint-backend.git](https://github.com/egallardop13/WorkPoint-backend.git)
+   git clone https://github.com/egallardop13/WorkPoint-backend.git
    cd DotnetApi
    ```
 
