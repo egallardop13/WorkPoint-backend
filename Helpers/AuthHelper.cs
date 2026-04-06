@@ -6,6 +6,7 @@ using System.Text;
 using Dapper;
 using DotnetAPI.Data;
 using DotnetAPI.Dtos;
+using DotnetAPI.Models;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.IdentityModel.Tokens;
 
@@ -22,7 +23,64 @@ namespace DotnetAPI.Helpers
             _config = config;
         }
 
-        public byte[] GetPasswordHash(string password, byte[] passwordSalt)
+        public string GenerateRefreshToken()
+        {
+            var randomBytes = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            return Convert.ToBase64String(randomBytes);
+        }
+
+        public bool SaveRefreshToken(int userId, string token, DateTime expiresAt)
+        {
+            string sql =
+                @"INSERT INTO WorkPointSchema.RefreshTokens (UserId, Token, ExpiresAt, CreatedAt)
+                VALUES (@UserIdParam, @TokenParam, @ExpiresAtParam, GETUTCDATE())";
+
+            DynamicParameters sqlParameters = new DynamicParameters();
+            sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
+            sqlParameters.Add("@TokenParam", token, DbType.String);
+            sqlParameters.Add("@ExpiresAtParam", expiresAt, DbType.DateTime2);
+
+            return _dapper.ExecuteSqlWithParameter(sql, sqlParameters);
+        }
+
+        public RefreshToken? GetValidRefreshToken(string token)
+        {
+            string sql =
+                @"SELECT Id, UserId, Token, ExpiresAt, CreatedAt, RevokedAt
+                FROM WorkPointSchema.RefreshTokens
+                WHERE Token = @TokenParam
+                    AND RevokedAt IS NULL
+                    AND ExpiresAt > GETUTCDATE()";
+
+            DynamicParameters sqlParameters = new DynamicParameters();
+            sqlParameters.Add("@TokenParam", token, DbType.String);
+
+            try
+            {
+                return _dapper.LoadDataSingleWithParameters<RefreshToken>(sql, sqlParameters);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public bool RevokeRefreshToken(string token)
+        {
+            string sql =
+                @"UPDATE WorkPointSchema.RefreshTokens
+                SET RevokedAt = GETUTCDATE()
+                WHERE Token = @TokenParam AND RevokedAt IS NULL";
+
+            DynamicParameters sqlParameters = new DynamicParameters();
+            sqlParameters.Add("@TokenParam", token, DbType.String);
+
+            return _dapper.ExecuteSqlWithParameter(sql, sqlParameters);
+        }
+
+        public byte[] GetPasswordHash(string password, byte[] passwordSalt, int iterations = 600000)
         {
             string passwordSaltPlusString =
                 _config.GetSection("AppSettings:PasswordKey").Value
@@ -31,7 +89,7 @@ namespace DotnetAPI.Helpers
                 password: password,
                 salt: Encoding.ASCII.GetBytes(passwordSaltPlusString),
                 prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
+                iterationCount: iterations,
                 numBytesRequested: 256 / 8
             );
         }
@@ -59,7 +117,7 @@ namespace DotnetAPI.Helpers
             {
                 Subject = new ClaimsIdentity(claims),
                 SigningCredentials = credentials,
-                Expires = DateTime.Now.AddDays(1),
+                Expires = DateTime.UtcNow.AddMinutes(15),
                 Issuer = issuer,
                 Audience = audience,
             };

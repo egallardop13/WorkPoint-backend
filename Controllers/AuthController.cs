@@ -109,12 +109,36 @@ namespace DotnetAPI.Controllers
                 userForLoginConfirmation.PasswordSalt
             );
 
-            if (
-                !CryptographicOperations.FixedTimeEquals(
-                    passwordHash,
+            bool passwordValid = CryptographicOperations.FixedTimeEquals(
+                passwordHash,
+                userForLoginConfirmation.PasswordHash
+            );
+
+            if (!passwordValid)
+            {
+                byte[] legacyHash = _authHelper.GetPasswordHash(
+                    userForLogin.Password,
+                    userForLoginConfirmation.PasswordSalt,
+                    100000
+                );
+                passwordValid = CryptographicOperations.FixedTimeEquals(
+                    legacyHash,
                     userForLoginConfirmation.PasswordHash
-                )
-            )
+                );
+
+                if (passwordValid)
+                {
+                    _authHelper.SetPassword(
+                        new UserForLoginDto
+                        {
+                            Email = userForLogin.Email,
+                            Password = userForLogin.Password,
+                        }
+                    );
+                }
+            }
+
+            if (!passwordValid)
             {
                 return StatusCode(401, "Password is incorrect");
             }
@@ -125,8 +149,50 @@ namespace DotnetAPI.Controllers
             userIdParams.Add("@EmailParam", userForLogin.Email, DbType.String);
             int userId = _dapper.LoadDataSingleWithParameters<int>(sqlForUserId, userIdParams);
 
+            string accessToken = _authHelper.CreateToken(userId);
+            string refreshToken = _authHelper.GenerateRefreshToken();
+            _authHelper.SaveRefreshToken(userId, refreshToken, DateTime.UtcNow.AddDays(7));
+
             return Ok(
-                new Dictionary<string, string> { { "token", _authHelper.CreateToken(userId) } }
+                new Dictionary<string, string>
+                {
+                    { "token", accessToken },
+                    { "refreshToken", refreshToken },
+                }
+            );
+        }
+
+        [AllowAnonymous]
+        [HttpPost("Refresh")]
+        public IActionResult Refresh([FromBody] Dictionary<string, string> body)
+        {
+            if (!body.TryGetValue("refreshToken", out string? token) || string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Refresh token is required");
+            }
+
+            var storedToken = _authHelper.GetValidRefreshToken(token);
+            if (storedToken == null)
+            {
+                return StatusCode(401, "Invalid or expired refresh token");
+            }
+
+            _authHelper.RevokeRefreshToken(token);
+
+            string newAccessToken = _authHelper.CreateToken(storedToken.UserId);
+            string newRefreshToken = _authHelper.GenerateRefreshToken();
+            _authHelper.SaveRefreshToken(
+                storedToken.UserId,
+                newRefreshToken,
+                DateTime.UtcNow.AddDays(7)
+            );
+
+            return Ok(
+                new Dictionary<string, string>
+                {
+                    { "token", newAccessToken },
+                    { "refreshToken", newRefreshToken },
+                }
             );
         }
 

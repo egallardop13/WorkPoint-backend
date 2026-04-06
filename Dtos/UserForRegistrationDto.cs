@@ -1,56 +1,45 @@
-using DotnetAPI.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace DotnetAPI.Dtos
 {
     public partial class UserForRegistrationDto
     {
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string PasswordConfirm { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Gender { get; set; }
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
 
-        public string JobTitle { get; set; }
-        public string Department { get; set; }
+        [Required]
+        [MinLength(8)]
+        public string Password { get; set; } = "";
+
+        [Required]
+        [Compare("Password")]
+        public string PasswordConfirm { get; set; } = "";
+
+        [Required]
+        [StringLength(50)]
+        public string FirstName { get; set; } = "";
+
+        [Required]
+        [StringLength(50)]
+        public string LastName { get; set; } = "";
+
+        [Required]
+        public string Gender { get; set; } = "";
+
+        [Required]
+        [StringLength(100)]
+        public string JobTitle { get; set; } = "";
+
+        [Required]
+        [StringLength(100)]
+        public string Department { get; set; } = "";
+
+        [Range(0, double.MaxValue)]
         public decimal Salary { get; set; }
-        public DateTime DateHired { get; set; }
-        public DateTime DateExited { get; set; }
 
-        public UserForRegistrationDto()
-        {
-            if (Email == null)
-            {
-                Email = "";
-            }
-            if (Password == null)
-            {
-                Password = "";
-            }
-            if (PasswordConfirm == null)
-            {
-                PasswordConfirm = "";
-            }
-            if (FirstName == null)
-            {
-                FirstName = "";
-            }
-            if (LastName == null)
-            {
-                LastName = "";
-            }
-            if (Gender == null)
-            {
-                Gender = "";
-            }
-            if (JobTitle == null)
-            {
-                JobTitle = "";
-            }
-            if (Department == null)
-            {
-                Department = "";
-            }
-        }
+        public DateTime DateHired { get; set; }
+
+        public DateTime DateExited { get; set; }
     }
 }
