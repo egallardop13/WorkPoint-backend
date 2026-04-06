@@ -71,12 +71,11 @@ namespace DotnetAPI.Controllers
         [HttpDelete("DeleteUserSalary/{userId}")]
         public IActionResult DeleteUserSalary(int userId)
         {
-            string sql =
-                @"DELETE FROM WorkPointSchema.UserSalary
-        WHERE UserId = " + userId.ToString();
+            string sql = "DELETE FROM WorkPointSchema.UserSalary WHERE UserId = @UserIdParam";
+            DynamicParameters sqlParameters = new DynamicParameters();
+            sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
 
-            Console.WriteLine(sql);
-            if (_dapper.ExecuteSql(sql))
+            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
             {
                 return Ok();
             }

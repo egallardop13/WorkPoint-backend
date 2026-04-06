@@ -1,15 +1,19 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var allowedOrigins =
+    builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:3000" };
 
 builder.Services.AddCors(options =>
 {
@@ -33,11 +37,7 @@ builder.Services.AddCors(options =>
         (corsbuilder) =>
         {
             corsbuilder
-                .WithOrigins(
-                    "http://localhost:3000",
-                    "http://localhost:4200",
-                    "http://localhost:8000"
-                )
+                .WithOrigins(allowedOrigins)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials();
@@ -46,6 +46,10 @@ builder.Services.AddCors(options =>
 });
 
 string? tokenKeyString = builder.Configuration.GetSection("AppSettings:TokenKey").Value;
+string issuer =
+    builder.Configuration.GetValue<string>("AppSettings:Issuer") ?? "WorkPointAPI";
+string audience =
+    builder.Configuration.GetValue<string>("AppSettings:Audience") ?? "WorkPointClient";
 
 builder
     .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -57,21 +61,30 @@ builder
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.ASCII.GetBytes(tokenKeyString != null ? tokenKeyString : "")
             ),
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidIssuer = issuer,
+            ValidateAudience = true,
+            ValidAudience = audience,
         };
     });
 
-// TokenValidationParameters tokenValidationParameters = new TokenValidationParameters
-// {
-//     IssuerSigningKey = tokenKey,
-//     ValidateIssuerSigningKey = true,   //false
-//     ValidateIssuer = false,
-//     ValidateAudience = false
-// };
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter(
+        "auth",
+        limiterOptions =>
+        {
+            limiterOptions.PermitLimit = 5;
+            limiterOptions.Window = TimeSpan.FromMinutes(1);
+            limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            limiterOptions.QueueLimit = 0;
+        }
+    );
+    options.RejectionStatusCode = 429;
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseCors("DevCors");
@@ -84,12 +97,8 @@ else
     app.UseHttpsRedirection();
 }
 
-// app.MapGet("/weatherforecast", () =>
-// {
+app.UseRateLimiter();
 
-// })
-// .WithName("GetWeatherForecast")
-// .WithOpenApi();
 app.UseAuthentication();
 
 app.UseAuthorization();

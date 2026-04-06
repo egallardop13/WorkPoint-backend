@@ -125,12 +125,11 @@ FROM WorkPointSchema.UserJobInfo";
         [HttpDelete("DeleteUserJobInfo/{userId}")]
         public IActionResult DeleteUser(int userId)
         {
-            string sql =
-                @"DELETE FROM WorkPointSchema.UserJobInfo
-        WHERE UserId = " + userId.ToString();
+            string sql = "DELETE FROM WorkPointSchema.UserJobInfo WHERE UserId = @UserIdParam";
+            DynamicParameters sqlParameters = new DynamicParameters();
+            sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
 
-            Console.WriteLine(sql);
-            if (_dapper.ExecuteSql(sql))
+            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
             {
                 return Ok();
             }

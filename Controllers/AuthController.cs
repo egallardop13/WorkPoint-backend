@@ -1,4 +1,5 @@
 using System.Data;
+using System.Security.Cryptography;
 using AutoMapper;
 using Dapper;
 using DotnetAPI.Data;
@@ -7,6 +8,7 @@ using DotnetAPI.Helpers;
 using DotnetAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace DotnetAPI.Controllers
 {
@@ -36,16 +38,20 @@ namespace DotnetAPI.Controllers
         }
 
         [AllowAnonymous]
+        [EnableRateLimiting("auth")]
         [HttpPost("Register")]
         public IActionResult Register(UserForRegistrationDto userForRegistration)
         {
             if (userForRegistration.Password == userForRegistration.PasswordConfirm)
             {
                 string sqlCheckUserExists =
-                    "SELECT Email FROM WorkPointSchema.Auth WHERE Email = '"
-                    + userForRegistration.Email
-                    + "'";
-                IEnumerable<string> existingUsers = _dapper.LoadData<string>(sqlCheckUserExists);
+                    "SELECT Email FROM WorkPointSchema.Auth WHERE Email = @EmailParam";
+                DynamicParameters checkParams = new DynamicParameters();
+                checkParams.Add("@EmailParam", userForRegistration.Email, DbType.String);
+                IEnumerable<string> existingUsers = _dapper.LoadDataWithParameters<string>(
+                    sqlCheckUserExists,
+                    checkParams
+                );
                 if (existingUsers.Count() == 0)
                 {
                     UserForLoginDto userForSetPassword = new UserForLoginDto
@@ -81,11 +87,12 @@ namespace DotnetAPI.Controllers
         }
 
         [AllowAnonymous]
+        [EnableRateLimiting("auth")]
         [HttpPost("Login")]
         public IActionResult Login(UserForLoginDto userForLogin)
         {
             string sqlForHashAndSalt =
-                @"EXEC WorkPointSchema.spLoginConfirmation_Get 
+                @"EXEC WorkPointSchema.spLoginConfirmation_Get
                 @Email = @EmailParam";
             DynamicParameters sqlParameters = new DynamicParameters();
 
@@ -102,21 +109,21 @@ namespace DotnetAPI.Controllers
                 userForLoginConfirmation.PasswordSalt
             );
 
-            for (int i = 0; i < passwordHash.Length; i++)
+            if (
+                !CryptographicOperations.FixedTimeEquals(
+                    passwordHash,
+                    userForLoginConfirmation.PasswordHash
+                )
+            )
             {
-                if (passwordHash[i] != userForLoginConfirmation.PasswordHash[i])
-                {
-                    return StatusCode(401, "Password is incorrect");
-                }
+                return StatusCode(401, "Password is incorrect");
             }
 
             string sqlForUserId =
-                @"
-            SELECT UserId FROM WorkPointSchema.Users WHERE Email = '"
-                + userForLogin.Email
-                + "'";
-
-            int userId = _dapper.LoadDataSingle<int>(sqlForUserId);
+                "SELECT UserId FROM WorkPointSchema.Users WHERE Email = @EmailParam";
+            DynamicParameters userIdParams = new DynamicParameters();
+            userIdParams.Add("@EmailParam", userForLogin.Email, DbType.String);
+            int userId = _dapper.LoadDataSingleWithParameters<int>(sqlForUserId, userIdParams);
 
             return Ok(
                 new Dictionary<string, string> { { "token", _authHelper.CreateToken(userId) } }
@@ -127,9 +134,14 @@ namespace DotnetAPI.Controllers
         public IActionResult RefreshToken()
         {
             string userId = User.FindFirst("userId")?.Value + "";
-            string userIdSql = "SELECT UserId FROM WorkPointSchema.Users WHERE UserId = " + userId;
-
-            int userIdFromDB = _dapper.LoadDataSingle<int>(userIdSql);
+            string userIdSql =
+                "SELECT UserId FROM WorkPointSchema.Users WHERE UserId = @UserIdParam";
+            DynamicParameters refreshParams = new DynamicParameters();
+            refreshParams.Add("@UserIdParam", userId, DbType.Int32);
+            int userIdFromDB = _dapper.LoadDataSingleWithParameters<int>(
+                userIdSql,
+                refreshParams
+            );
             return Ok(
                 new Dictionary<string, string>
                 {

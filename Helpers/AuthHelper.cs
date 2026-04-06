@@ -41,6 +41,10 @@ namespace DotnetAPI.Helpers
             Claim[] claims = new Claim[] { new Claim("userId", userId.ToString()) };
 
             string? tokenKeyString = _config.GetSection("AppSettings:TokenKey").Value;
+            string issuer =
+                _config.GetValue<string>("AppSettings:Issuer") ?? "WorkPointAPI";
+            string audience =
+                _config.GetValue<string>("AppSettings:Audience") ?? "WorkPointClient";
 
             SymmetricSecurityKey tokenKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(tokenKeyString != null ? tokenKeyString : "")
@@ -56,6 +60,8 @@ namespace DotnetAPI.Helpers
                 Subject = new ClaimsIdentity(claims),
                 SigningCredentials = credentials,
                 Expires = DateTime.Now.AddDays(1),
+                Issuer = issuer,
+                Audience = audience,
             };
 
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();

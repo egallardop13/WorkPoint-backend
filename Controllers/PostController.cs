@@ -123,8 +123,8 @@ namespace DotnetAPI.Controllers
         public IActionResult DeletePost(int postId)
         {
             string sql =
-                @"EXEC WorkPointSchema.spPost_Delete @PostId = @PostIdParameter, 
-                @UserId = " + this.User.FindFirst("userId")?.Value;
+                @"EXEC WorkPointSchema.spPost_Delete @PostId = @PostIdParameter,
+                @UserId = @UserIdParameter";
 
             DynamicParameters sqlParameters = new DynamicParameters();
             sqlParameters.Add("@PostIdParameter", postId, DbType.Int32);
@@ -134,7 +134,7 @@ namespace DotnetAPI.Controllers
                 DbType.Int32
             );
 
-            if (_dapper.ExecuteSql(sql))
+            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
             {
                 return Ok();
             }
