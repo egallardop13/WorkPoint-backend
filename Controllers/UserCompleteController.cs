@@ -1,8 +1,5 @@
-using System.Data;
-using Dapper;
-using DotnetAPI.Data;
-using DotnetAPI.Helpers;
 using DotnetAPI.Models;
+using DotnetAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,44 +10,17 @@ namespace DotnetAPI.Controllers
     [Route("[controller]")]
     public class UserCompleteController : ControllerBase
     {
-        DataContextDapper _dapper;
+        private readonly IUserService _userService;
 
-        ReusableSql _reusableSql;
-
-        public UserCompleteController(IConfiguration config)
+        public UserCompleteController(IUserService userService)
         {
-            _dapper = new DataContextDapper(config);
-            _reusableSql = new ReusableSql(config);
+            _userService = userService;
         }
 
         [HttpGet("GetUsers/{userId}/{isActive}")]
         public IEnumerable<UserComplete> GetUsers(int userId, bool isActive)
         {
-            string sql = @"EXEC WorkPointSchema.spUsers_Get";
-            string parameters = "";
-            DynamicParameters sqlParameters = new DynamicParameters();
-
-            if (userId != 0)
-            {
-                parameters += ", @UserId= @UserIdParameter";
-                sqlParameters.Add("@UserIdParameter", userId, DbType.Int32);
-            }
-            if (isActive)
-            {
-                parameters += ", @Active= @ActiveParameter";
-                sqlParameters.Add("@ActiveParameter", isActive, DbType.Boolean);
-            }
-
-            if (parameters.Length > 0)
-            {
-                sql += parameters.Substring(1);
-            }
-
-            IEnumerable<UserComplete> users = _dapper.LoadDataWithParameters<UserComplete>(
-                sql,
-                sqlParameters
-            );
-            return users;
+            return _userService.GetUsers(userId, isActive);
         }
 
         [HttpGet("GetUsersWithPagination/{Page}/{Limit}")]
@@ -61,45 +31,8 @@ namespace DotnetAPI.Controllers
             string? sort = null
         )
         {
-            string sql = @"EXEC WorkPointSchema.spUsers_Get_WithPagination";
-            string parameters = "";
-            DynamicParameters sqlParameters = new DynamicParameters();
+            var result = _userService.GetUsersWithPagination(Page, Limit, query, sort);
 
-            // Safely add @query parameter
-            if (!string.IsNullOrWhiteSpace(query))
-            {
-                parameters += ", @Query = @QueryParameter";
-                sqlParameters.Add("@QueryParameter", query, DbType.String);
-            }
-            if (!string.IsNullOrWhiteSpace(sort))
-            {
-                parameters += ", @Sort = @SortParameter";
-                sqlParameters.Add("@SortParameter", sort, DbType.String);
-            }
-
-            // Safely add @Page parameter
-            parameters += ", @Page= @PageParameter";
-            sqlParameters.Add("@PageParameter", Page > 0 ? Page : 1, DbType.Int32);
-
-            // Safely add @Limit parameter
-            parameters += ", @Limit= @LimitParameter";
-            sqlParameters.Add("@LimitParameter", Limit > 0 ? Limit : 10, DbType.Int32);
-
-            // Build the final SQL query with parameters
-            if (parameters.Length > 0)
-            {
-                sql += parameters.Substring(1); // Remove the leading comma
-            }
-
-            // Log the constructed SQL for debugging
-            Console.WriteLine(sql);
-
-            // Execute the stored procedure
-            var result = _dapper
-                .LoadDataWithParameters<dynamic>(sql, sqlParameters)
-                .FirstOrDefault();
-
-            // Ensure result is not null
             if (result == null)
             {
                 return NotFound(
@@ -112,30 +45,16 @@ namespace DotnetAPI.Controllers
                 );
             }
 
-            // Return result in the desired format
-            return Ok(
-                new
-                {
-                    arrayUserComplete = result.UserComplete, // Extracted JSON array from SP
-                    totalPages = result.totalPages, // Extracted total pages
-                    totalUsers = result.totalUsers // Extracted total users
-                    ,
-                }
-            );
+            return Ok(result);
         }
 
         [HttpPut("UpsertUser")]
         public IActionResult UpsertUser(UserComplete user)
         {
-            int result = _reusableSql.UpsertUser(user).Response;
+            int result = _userService.UpsertUser(user);
             if (result == 1)
             {
-                return Ok(
-                    new
-                    {
-                        message = "User updated or created successfully.", // Extracted JSON array from SP
-                    }
-                );
+                return Ok(new { message = "User updated or created successfully." });
             }
             else if (result == 0)
             {
@@ -148,14 +67,7 @@ namespace DotnetAPI.Controllers
         [HttpDelete("DeleteUser/{userId}")]
         public IActionResult DeleteUser(int userId)
         {
-            string sql =
-                @"WorkPointSchema.spUser_Delete
-                @UserId = @UserIdParameter";
-
-            DynamicParameters sqlParameters = new DynamicParameters();
-            sqlParameters.Add("@UserIdParameter", userId, DbType.Int32);
-
-            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
+            if (_userService.DeleteUser(userId))
             {
                 return Ok();
             }

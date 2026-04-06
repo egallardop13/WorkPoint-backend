@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 
 namespace DotnetAPI.Data
 {
-    class DataContextDapper
+    public class DataContextDapper
     {
         private readonly IConfiguration _config;
 
@@ -15,7 +15,7 @@ namespace DotnetAPI.Data
 
         public IEnumerable<T> LoadData<T>(string sql)
         {
-            IDbConnection dbConnection = new SqlConnection(
+            using IDbConnection dbConnection = new SqlConnection(
                 _config.GetConnectionString("DefaultConnection")
             );
             return dbConnection.Query<T>(sql);
@@ -23,7 +23,7 @@ namespace DotnetAPI.Data
 
         public T LoadDataSingle<T>(string sql)
         {
-            IDbConnection dbConnection = new SqlConnection(
+            using IDbConnection dbConnection = new SqlConnection(
                 _config.GetConnectionString("DefaultConnection")
             );
             return dbConnection.QuerySingle<T>(sql);
@@ -31,7 +31,7 @@ namespace DotnetAPI.Data
 
         public int ExecuteSqlWithRowCount(string sql)
         {
-            IDbConnection dbConnection = new SqlConnection(
+            using IDbConnection dbConnection = new SqlConnection(
                 _config.GetConnectionString("DefaultConnection")
             );
             return dbConnection.Execute(sql);
@@ -39,7 +39,7 @@ namespace DotnetAPI.Data
 
         public bool ExecuteSql(string sql)
         {
-            IDbConnection dbConnection = new SqlConnection(
+            using IDbConnection dbConnection = new SqlConnection(
                 _config.GetConnectionString("DefaultConnection")
             );
             return dbConnection.Execute(sql) > 0;
@@ -47,7 +47,7 @@ namespace DotnetAPI.Data
 
         public bool ExecuteSqlWithParameter(string sql, DynamicParameters Parameters)
         {
-            IDbConnection dbConnection = new SqlConnection(
+            using IDbConnection dbConnection = new SqlConnection(
                 _config.GetConnectionString("DefaultConnection")
             );
             return dbConnection.Execute(sql, Parameters) > 0;
@@ -55,7 +55,7 @@ namespace DotnetAPI.Data
 
         public IEnumerable<T> LoadDataWithParameters<T>(string sql, DynamicParameters Parameters)
         {
-            IDbConnection dbConnection = new SqlConnection(
+            using IDbConnection dbConnection = new SqlConnection(
                 _config.GetConnectionString("DefaultConnection")
             );
             return dbConnection.Query<T>(sql, Parameters);
@@ -63,7 +63,7 @@ namespace DotnetAPI.Data
 
         public T LoadDataSingleWithParameters<T>(string sql, DynamicParameters Parameters)
         {
-            IDbConnection dbConnection = new SqlConnection(
+            using IDbConnection dbConnection = new SqlConnection(
                 _config.GetConnectionString("DefaultConnection")
             );
             return dbConnection.QuerySingle<T>(sql, Parameters);

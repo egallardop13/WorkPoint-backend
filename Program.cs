@@ -1,5 +1,8 @@
 using System.Text;
 using System.Threading.RateLimiting;
+using DotnetAPI.Data;
+using DotnetAPI.Middleware;
+using DotnetAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +13,12 @@ builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<DataContextDapper>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<ISalaryService, SalaryService>();
 
 var allowedOrigins =
     builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
@@ -96,6 +105,8 @@ else
     app.UseCors("ProdCors");
     app.UseHttpsRedirection();
 }
+
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseRateLimiter();
 

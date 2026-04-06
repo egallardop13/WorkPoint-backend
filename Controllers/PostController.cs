@@ -1,7 +1,5 @@
-using System.Data;
-using Dapper;
-using DotnetAPI.Data;
 using DotnetAPI.Models;
+using DotnetAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,11 +10,11 @@ namespace DotnetAPI.Controllers
     [Route("[controller]")]
     public class PostController : ControllerBase
     {
-        private readonly DataContextDapper _dapper;
+        private readonly IPostService _postService;
 
-        public PostController(IConfiguration config)
+        public PostController(IPostService postService)
         {
-            _dapper = new DataContextDapper(config);
+            _postService = postService;
         }
 
         [HttpGet("Posts/{postId}/{userId}/{searchParam}")]
@@ -26,119 +24,35 @@ namespace DotnetAPI.Controllers
             string searchParam = "None"
         )
         {
-            string sql = @"EXEC WorkPointSchema.spPost_Get";
-            string stringParameters = "";
-
-            DynamicParameters sqlParameters = new DynamicParameters();
-            if (postId != 0)
-            {
-                stringParameters += ", @PostId = @PostIdParameter";
-                sqlParameters.Add("@PostIdParameter", postId, DbType.Int32);
-            }
-            if (userId != 0)
-            {
-                stringParameters += ", @UserId = @UserIdParameter";
-                sqlParameters.Add("@UserIdParameter", postId, DbType.Int32);
-            }
-            if (searchParam.ToLower() != "none")
-            {
-                stringParameters += ", @SearchValue = @SearchValueParameter";
-                sqlParameters.Add("@SearchValueParameter", searchParam, DbType.String);
-            }
-
-            if (stringParameters.Length > 0)
-            {
-                sql += stringParameters.Substring(1);
-            }
-            Console.WriteLine(sql);
-            return _dapper.LoadDataWithParameters<Post>(sql, sqlParameters);
+            return _postService.GetPosts(postId, userId, searchParam);
         }
 
         [HttpGet("MyPosts")]
         public IEnumerable<Post> GetMyPosts()
         {
-            string sql = @"EXEC WorkPointSchema.spPost_Get @PostId = @UserIdParameter";
-            DynamicParameters sqlParameters = new DynamicParameters();
-            sqlParameters.Add(
-                "@UserIdParameter",
-                this.User.FindFirst("userId")?.Value,
-                DbType.Int32
-            );
-            return _dapper.LoadDataWithParameters<Post>(sql, sqlParameters);
+            int userId = int.Parse(this.User.FindFirst("userId")?.Value ?? "0");
+            return _postService.GetMyPosts(userId);
         }
 
         [HttpPut("UpsertPost")]
         public IActionResult UpsertPost(Post postToUpsert)
         {
-            string sql =
-                @"EXEC WorkPointSchema.spPosts_Upsert 
-                @UserId = @UserIdParameter, 
-                @PostTitle = @PostTitleParameter, 
-                @PostContent = @PostContentParameter";
-
-            DynamicParameters sqlParameters = new DynamicParameters();
-            sqlParameters.Add(
-                "@UserIdParameter",
-                this.User.FindFirst("userId")?.Value,
-                DbType.Int32
-            );
-            sqlParameters.Add("@PostTitleParameter", postToUpsert.PostTitle, DbType.String);
-            sqlParameters.Add("@PostContentParameter", postToUpsert.PostContent, DbType.String);
-
-            if (postToUpsert.PostId != 0)
-            {
-                sql += ", @PostId = @PostIdParameter";
-                sqlParameters.Add("@PostIdParameter", postToUpsert.PostId, DbType.Int32);
-            }
-            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
+            int userId = int.Parse(this.User.FindFirst("userId")?.Value ?? "0");
+            if (_postService.UpsertPost(postToUpsert, userId))
             {
                 return Ok();
             }
             throw new Exception("Failed to Upsert a post");
         }
 
-        // [HttpPut("Post")]
-        // public IActionResult EditPost(PostToEditDTO postToEdit)
-        // {
-        //     string sql =
-        //         @"
-        //     UPDATE WorkPointSchema.Posts
-        //         SET PostTitle = '"
-        //         + postToEdit.PostTitle
-        //         + "', PostContent = '"
-        //         + postToEdit.PostContent
-        //         + @"', PostUpdated = GETDATE()
-        //             WHERE PostId = "
-        //         + postToEdit.PostID.ToString()
-        //         + " AND UserId = "
-        //         + (this.User.FindFirst("userId")?.Value);
-        //     if (_dapper.ExecuteSql(sql))
-        //     {
-        //         return Ok();
-        //     }
-        //     throw new Exception("Failed to update post");
-        // }
-
         [HttpDelete("Post/{postId}")]
         public IActionResult DeletePost(int postId)
         {
-            string sql =
-                @"EXEC WorkPointSchema.spPost_Delete @PostId = @PostIdParameter,
-                @UserId = @UserIdParameter";
-
-            DynamicParameters sqlParameters = new DynamicParameters();
-            sqlParameters.Add("@PostIdParameter", postId, DbType.Int32);
-            sqlParameters.Add(
-                "@UserIdParameter",
-                this.User.FindFirst("userId")?.Value,
-                DbType.Int32
-            );
-
-            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
+            int userId = int.Parse(this.User.FindFirst("userId")?.Value ?? "0");
+            if (_postService.DeletePost(postId, userId))
             {
                 return Ok();
             }
-
             throw new Exception("Failed to delete post");
         }
     }

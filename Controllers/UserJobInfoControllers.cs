@@ -1,7 +1,5 @@
-using System.Data;
-using Dapper;
-using DotnetAPI.Data;
 using DotnetAPI.Models;
+using DotnetAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,11 +10,11 @@ namespace DotnetAPI.Controllers
     [Route("[controller]")]
     public class UserJobInfoController : ControllerBase
     {
-        DataContextDapper _dapper;
+        private readonly ISalaryService _salaryService;
 
-        public UserJobInfoController(IConfiguration config)
+        public UserJobInfoController(ISalaryService salaryService)
         {
-            _dapper = new DataContextDapper(config);
+            _salaryService = salaryService;
         }
 
         [HttpGet("GetUsersInDepartments/{department}/{page}/{limit}")]
@@ -24,7 +22,7 @@ namespace DotnetAPI.Controllers
             string department,
             int page,
             int limit,
-            [FromQuery] string? query = null // Keep 'query' as a query string parameter
+            [FromQuery] string? query = null
         )
         {
             if (string.IsNullOrWhiteSpace(department) || page < 1 || limit < 1)
@@ -34,102 +32,19 @@ namespace DotnetAPI.Controllers
                 );
             }
 
-            string sql = @"EXEC WorkPointSchema.spGet_UsersInDepartments";
-            string parameters = "";
-            DynamicParameters sqlParameters = new DynamicParameters();
-
-            // Add parameters for the stored procedure
-            if (!string.IsNullOrWhiteSpace(department))
-            {
-                parameters += ", @Department = @DepartmentParameter";
-                sqlParameters.Add("@DepartmentParameter", department, DbType.String);
-            }
-
-            if (page > 0)
-            {
-                parameters += ", @Page = @PageParameter";
-                sqlParameters.Add("@PageParameter", page, DbType.Int32);
-            }
-
-            if (limit > 0)
-            {
-                parameters += ", @Limit = @LimitParameter";
-                sqlParameters.Add("@LimitParameter", limit, DbType.Int32);
-            }
-
-            if (!string.IsNullOrWhiteSpace(query))
-            {
-                parameters += ", @Query = @QueryParameter";
-                sqlParameters.Add("@QueryParameter", query, DbType.String);
-            }
-
-            if (parameters.Length > 0)
-            {
-                sql += parameters.Substring(1); // Remove leading comma
-            }
-
-            try
-            {
-                var result = _dapper.LoadDataWithParameters<dynamic>(sql, sqlParameters);
-
-                var summary = new DepartmentSummary
-                {
-                    Users = result
-                        .Select(r => new UserComplete
-                        {
-                            UserId = r.UserId,
-                            FirstName = r.FirstName,
-                            LastName = r.LastName,
-                            Email = r.Email,
-                            Gender = r.Gender,
-                            Active = r.Active,
-                            JobTitle = r.JobTitle,
-                            Department = r.Department,
-                            Salary = r.Salary,
-                            AvgSalary = r.AvgSalary,
-                            DateHired = r.DateHired,
-                            DateExited = r.DateExited,
-                        })
-                        .ToList(),
-                    TotalPages = result.FirstOrDefault()?.TotalPages ?? 0,
-                    TotalUsers = result.FirstOrDefault()?.TotalUsers ?? 0,
-                    TotalDepartmentUsers = result.FirstOrDefault()?.TotalDepartmentUsers ?? 0,
-                    TotalActiveSalary = result.FirstOrDefault()?.TotalActiveSalary ?? 0,
-                    TotalInactiveSalary = result.FirstOrDefault()?.TotalInactiveSalary ?? 0,
-                };
-
-                return Ok(summary);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            return Ok(_salaryService.GetUsersInDepartments(department, page, limit, query));
         }
 
         [HttpGet("GetUsersJobInfo/")]
         public IEnumerable<UserJobInfo> GetUsersJobInfo()
         {
-            string sql =
-                @"SELECT [UserId],
-    [JobTitle],
-    [Department]   
-FROM WorkPointSchema.UserJobInfo";
-
-            IEnumerable<UserJobInfo> users = _dapper.LoadData<UserJobInfo>(sql);
-            return users;
-            // string[] responseArray = new string[] {"Test1", "Test2", testValue};
-            // return responseArray;
+            return _salaryService.GetUsersJobInfo();
         }
 
         [HttpDelete("DeleteUserJobInfo/{userId}")]
         public IActionResult DeleteUser(int userId)
         {
-            string sql = "DELETE FROM WorkPointSchema.UserJobInfo WHERE UserId = @UserIdParam";
-            DynamicParameters sqlParameters = new DynamicParameters();
-            sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
-
-            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
+            if (_salaryService.DeleteUserJobInfo(userId))
             {
                 return Ok();
             }

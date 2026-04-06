@@ -1,7 +1,5 @@
-using System.Data;
-using Dapper;
-using DotnetAPI.Data;
 using DotnetAPI.Models;
+using DotnetAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,24 +10,17 @@ namespace DotnetAPI.Controllers
     [Route("[controller]")]
     public class UserSalaryController : ControllerBase
     {
-        DataContextDapper _dapper;
+        private readonly ISalaryService _salaryService;
 
-        public UserSalaryController(IConfiguration config)
+        public UserSalaryController(ISalaryService salaryService)
         {
-            _dapper = new DataContextDapper(config);
+            _salaryService = salaryService;
         }
 
         [HttpGet("GetUsersSalary/")]
         public IEnumerable<UserSalary> GetUsersSalary()
         {
-            string sql =
-                @"SELECT [UserId],
-                [Salary]
-                FROM WorkPointSchema.UserSalary";
-            IEnumerable<UserSalary> users = _dapper.LoadData<UserSalary>(sql);
-            return users;
-            // string[] responseArray = new string[] {"Test1", "Test2", testValue};
-            // return responseArray;
+            return _salaryService.GetUsersSalary();
         }
 
         [HttpGet("GetDepartmentsInfo/{department?}")]
@@ -39,43 +30,13 @@ namespace DotnetAPI.Controllers
             string? sort = null
         )
         {
-            string sql = @"EXEC WorkPointSchema.spGet_DepartmentsInfo";
-            string parameters = "";
-            DynamicParameters sqlParameters = new DynamicParameters();
-
-            if (!string.IsNullOrWhiteSpace(department))
-            {
-                parameters += ", @Department = @DepartmentParameter";
-                sqlParameters.Add("@DepartmentParameter", department, DbType.String);
-            }
-            if (!string.IsNullOrWhiteSpace(query))
-            {
-                parameters += ", @Query = @QueryParameter";
-                sqlParameters.Add("@QueryParameter", query, DbType.String);
-            }
-            if (!string.IsNullOrWhiteSpace(sort))
-            {
-                parameters += ", @Sort = @SortParameter";
-                sqlParameters.Add("@SortParameter", sort, DbType.String);
-            }
-            if (parameters.Length > 0)
-            {
-                sql += parameters.Substring(1); // Remove leading comma
-            }
-
-            IEnumerable<DepartmentInfo> departmentStats =
-                _dapper.LoadDataWithParameters<DepartmentInfo>(sql, sqlParameters);
-            return departmentStats;
+            return _salaryService.GetDepartmentsInfo(department, query, sort);
         }
 
         [HttpDelete("DeleteUserSalary/{userId}")]
         public IActionResult DeleteUserSalary(int userId)
         {
-            string sql = "DELETE FROM WorkPointSchema.UserSalary WHERE UserId = @UserIdParam";
-            DynamicParameters sqlParameters = new DynamicParameters();
-            sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
-
-            if (_dapper.ExecuteSqlWithParameter(sql, sqlParameters))
+            if (_salaryService.DeleteUserSalary(userId))
             {
                 return Ok();
             }
