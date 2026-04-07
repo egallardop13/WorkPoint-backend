@@ -112,7 +112,7 @@ namespace DotnetAPI.Services
             sqlParameters.Add("@ActiveParameter", user.Active, DbType.Boolean);
             sqlParameters.Add("@JobTitleParameter", user.JobTitle, DbType.String);
             sqlParameters.Add("@DepartmentParameter", user.Department, DbType.String);
-            sqlParameters.Add("@SalaryParameter", user.Salary, DbType.String);
+            sqlParameters.Add("@SalaryParameter", user.Salary, DbType.Decimal);
             sqlParameters.Add("@UserIdParameter", user.UserId, DbType.Int32);
             sqlParameters.Add("@DateHiredParameter", user.DateHired, DbType.DateTime);
             sqlParameters.Add("@DateExitedParameter", user.DateExited, DbType.DateTime);
@@ -123,7 +123,7 @@ namespace DotnetAPI.Services
         public bool DeleteUser(int userId)
         {
             string sql =
-                @"WorkPointSchema.spUser_Delete
+                @"EXEC WorkPointSchema.spUser_Delete
                 @UserId = @UserIdParameter";
 
             DynamicParameters sqlParameters = new DynamicParameters();
