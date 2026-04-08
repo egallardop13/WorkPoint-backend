@@ -61,7 +61,7 @@ namespace DotnetAPI.Helpers
             {
                 return _dapper.LoadDataSingleWithParameters<RefreshToken>(sql, sqlParameters);
             }
-            catch
+            catch (Exception)
             {
                 return null;
             }

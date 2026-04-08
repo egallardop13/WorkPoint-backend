@@ -40,7 +40,7 @@ namespace DotnetAPI.Helpers
             sqlParameters.Add("@ActiveParameter", user.Active, DbType.Boolean);
             sqlParameters.Add("@JobTitleParameter", user.JobTitle, DbType.String);
             sqlParameters.Add("@DepartmentParameter", user.Department, DbType.String);
-            sqlParameters.Add("@SalaryParameter", user.Salary, DbType.String);
+            sqlParameters.Add("@SalaryParameter", user.Salary, DbType.Decimal);
             sqlParameters.Add("@UserIdParameter", user.UserId, DbType.Int32);
             sqlParameters.Add("@DateHiredParameter", user.DateHired, DbType.DateTime);
             sqlParameters.Add("@DateExitedParameter", user.DateExited, DbType.DateTime);
