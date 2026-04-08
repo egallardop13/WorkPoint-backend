@@ -22,7 +22,6 @@ builder.Services.AddScoped<ISalaryService, SalaryService>();
 
 if (!builder.Environment.IsEnvironment("Testing"))
 {
-    builder.Services.AddApplicationInsightsTelemetry();
     builder.Services.AddHealthChecks()
         .AddSqlServer(
             builder.Configuration.GetConnectionString("DefaultConnection") ?? "",
