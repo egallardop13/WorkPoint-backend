@@ -7,10 +7,10 @@ namespace DotnetAPI.Services
 {
     public class UserService : IUserService
     {
-        private readonly DataContextDapper _dapper;
+        private readonly IDataContextDapper _dapper;
         private readonly ILogger<UserService> _logger;
 
-        public UserService(DataContextDapper dapper, ILogger<UserService> logger)
+        public UserService(IDataContextDapper dapper, ILogger<UserService> logger)
         {
             _dapper = dapper;
             _logger = logger;

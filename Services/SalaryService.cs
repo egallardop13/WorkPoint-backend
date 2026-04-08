@@ -7,10 +7,10 @@ namespace DotnetAPI.Services
 {
     public class SalaryService : ISalaryService
     {
-        private readonly DataContextDapper _dapper;
+        private readonly IDataContextDapper _dapper;
         private readonly ILogger<SalaryService> _logger;
 
-        public SalaryService(DataContextDapper dapper, ILogger<SalaryService> logger)
+        public SalaryService(IDataContextDapper dapper, ILogger<SalaryService> logger)
         {
             _dapper = dapper;
             _logger = logger;

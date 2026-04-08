@@ -14,11 +14,25 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<DataContextDapper>();
+builder.Services.AddScoped<IDataContextDapper, DataContextDapper>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<ISalaryService, SalaryService>();
+
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+    builder.Services.AddHealthChecks()
+        .AddSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection") ?? "",
+            name: "sqlserver",
+            tags: new[] { "db", "sql" });
+}
+else
+{
+    builder.Services.AddHealthChecks();
+}
 
 var allowedOrigins =
     builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
@@ -116,4 +130,28 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description
+            }),
+            totalDuration = report.TotalDuration
+        };
+        await context.Response.WriteAsJsonAsync(result);
+    }
+}).AllowAnonymous();
+
+app.MapGet("/ping", () => Results.Ok("pong")).AllowAnonymous();
+
 app.Run();
+
+public partial class Program { }

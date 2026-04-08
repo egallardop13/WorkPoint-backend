@@ -8,10 +8,10 @@ namespace DotnetAPI.Services
 {
     public class CompanyService : ICompanyService
     {
-        private readonly DataContextDapper _dapper;
+        private readonly IDataContextDapper _dapper;
         private readonly ILogger<CompanyService> _logger;
 
-        public CompanyService(DataContextDapper dapper, ILogger<CompanyService> logger)
+        public CompanyService(IDataContextDapper dapper, ILogger<CompanyService> logger)
         {
             _dapper = dapper;
             _logger = logger;

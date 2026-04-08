@@ -7,10 +7,10 @@ namespace DotnetAPI.Services
 {
     public class PostService : IPostService
     {
-        private readonly DataContextDapper _dapper;
+        private readonly IDataContextDapper _dapper;
         private readonly ILogger<PostService> _logger;
 
-        public PostService(DataContextDapper dapper, ILogger<PostService> logger)
+        public PostService(IDataContextDapper dapper, ILogger<PostService> logger)
         {
             _dapper = dapper;
             _logger = logger;
